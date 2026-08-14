@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Nexora — Eliminating Middlemen, Empowering Farmers</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --sky: #F0F9FF;
+      --meadow: #F0FDF4;
+      --field: #DCFCE7;
+      --leaf: #15803D;
+      --leaf-deep: #14532D;
+      --lime: #22C55E;
+      --blue: #2563EB;
+      --blue-deep: #1E3A8A;
+      --gold: #FF9933;
+      --cream: #ffffff;
+      --sand: #F8FAFC;
+      --text-main: #17352A;
+      --text-muted: #526B61;
+      --line: rgba(20, 83, 45,0.16);
+      --card: rgba(255,255,255,0.72);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: linear-gradient(180deg, var(--meadow) 0%, var(--sky) 45%, var(--meadow) 100%);
+      color: var(--text-main);
+      overflow-x: hidden;
+    }
+
+    /* ── CUSTOM CURSOR ── */
+    @media (pointer: fine) {
+      body { cursor: none; }
+      a, button, .btn-primary, .btn-secondary, .nav-cta, .sol-card, .impact-card, .p-card { cursor: none; }
+    }
+    #cursor-dot, #cursor-ring {
+      position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999;
+      border-radius: 50%; transform: translate(-50%,-50%);
+    }
+    #cursor-dot { width: 7px; height: 7px; background: var(--leaf); opacity: 0.9; }
+    #cursor-ring {
+      width: 34px; height: 34px; border: 1.5px solid rgba(21, 128, 61,0.55);
+      transition: width 0.25s, height 0.25s, border-color 0.25s, background 0.25s;
+    }
+    #cursor-ring.hover { width: 58px; height: 58px; border-color: rgba(37, 99, 235,0.7); background: rgba(21, 128, 61,0.08); }
+    @media (max-width: 900px), (pointer: coarse) {
+      #cursor-dot, #cursor-ring { display: none !important; }
+      body, a, button, .sol-card, .impact-card, .p-card { cursor: auto; }
+    }
+
+    /* ── PRELOADER ── */
+    #preloader {
+      position: fixed; inset: 0; z-index: 10000;
+      background: linear-gradient(160deg, #F0FDF4 0%, #F0F9FF 100%);
+      display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 1rem;
+      transition: opacity 0.6s ease, visibility 0.6s ease;
+    }
+    #preloader .pl-mark {
+      font-family: 'Playfair Display', serif; font-size: 2.4rem; font-weight: 900;
+      background: linear-gradient(120deg, var(--leaf-deep), var(--leaf) 40%, var(--blue) 70%, var(--leaf-deep));
+      background-size: 300% 100%; -webkit-background-clip: text; background-clip: text; color: transparent;
+      animation: gradientSweep 1.6s ease-in-out infinite;
+    }
+    #preloader .pl-bar { width: 160px; height: 3px; border-radius: 3px; background: rgba(21, 128, 61,0.15); overflow: hidden; }
+    #preloader .pl-bar::after {
+      content: ''; display: block; height: 100%; width: 40%;
+      background: linear-gradient(90deg, var(--leaf), var(--blue));
+      animation: plLoad 1s ease-in-out infinite;
+    }
+    @keyframes plLoad { 0% { transform: translateX(-100%); } 100% { transform: translateX(350%); } }
+    #preloader.done { opacity: 0; visibility: hidden; }
+
+    /* ── GRAIN OVERLAY (page-wide) ── */
+    #page-grain {
+      position: fixed; inset: -20%; z-index: 5; pointer-events: none; opacity: 0.02; mix-blend-mode: multiply;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      animation: grainShift 1.2s steps(4) infinite;
+    }
+    @keyframes grainShift {
+      0% { transform: translate(0,0); } 25% { transform: translate(-1%,1%); }
+      50% { transform: translate(1%,-1%); } 75% { transform: translate(-1%,-1%); } 100% { transform: translate(0,0); }
+    }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 10px; }
+    ::-webkit-scrollbar-track { background: var(--meadow); }
+    ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, var(--leaf), var(--blue)); border-radius: 10px; }
+    html { scrollbar-color: var(--leaf) var(--meadow); }
+
+    /* ── ROTATING GRADIENT GLOW BORDER (cards) ── */
+    .glow-border { position: relative; }
+    .glow-border::after {
+      content: ''; position: absolute; inset: -1.5px; border-radius: inherit; padding: 1.5px;
+      background: conic-gradient(from 0deg, var(--leaf), var(--blue), var(--gold), var(--leaf));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude;
+      opacity: 0; transition: opacity 0.3s; animation: spinBorder 3s linear infinite; pointer-events: none;
+    }
+    .glow-border:hover::after { opacity: 1; }
+    @keyframes spinBorder { to { transform: rotate(360deg); } }
+
+    /* ── MARQUEE TICKER ── */
+    .marquee {
+      overflow: hidden; white-space: nowrap;
+      background: linear-gradient(90deg, var(--leaf-deep), var(--blue-deep));
+      padding: 0.7rem 0; position: relative; z-index: 2;
+    }
+    .marquee-track { display: inline-block; animation: marqueeScroll 26s linear infinite; }
+    .marquee-track span { display: inline-block; padding: 0 2rem; font-size: 0.85rem; font-weight: 600; color: #fff; letter-spacing: 0.5px; }
+    @keyframes marqueeScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+    /* ── CLICK BURST PARTICLES ── */
+    .burst-particle {
+      position: fixed; z-index: 9997; pointer-events: none; font-size: 1.1rem;
+      animation: burstFly 0.9s ease-out forwards;
+    }
+    @keyframes burstFly {
+      to { transform: translate(var(--bx), var(--by)) rotate(var(--br)); opacity: 0; }
+    }
+
+    /* ── HERO TITLE WORD REVEAL ── */
+    .hero-title .word { display: inline-block; opacity: 0; transform: translateY(40px) rotateX(-40deg); animation: wordUp 0.7s cubic-bezier(.16,1,.3,1) forwards; transform-origin: bottom; }
+    @keyframes wordUp { to { opacity: 1; transform: translateY(0) rotateX(0); } }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.2rem 4rem;
+      background: rgba(255,255,255,0.72);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--line);
+      box-shadow: 0 4px 30px rgba(30, 58, 138,0.06);
+    }
+    .nav-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.6rem; font-weight: 900;
+      color: var(--leaf-deep);
+      letter-spacing: -0.5px;
+    }
+    .nav-logo span { color: var(--blue-deep); }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a {
+      position: relative;
+      color: var(--text-muted); text-decoration: none;
+      font-size: 0.9rem; font-weight: 500; letter-spacing: 0.5px;
+      transition: color 0.25s;
+    }
+    .nav-links a::after {
+      content: ''; position: absolute; left: 0; bottom: -4px;
+      width: 100%; height: 2px;
+      background: linear-gradient(90deg, var(--leaf), var(--blue));
+      transform: scaleX(0); transform-origin: left;
+      transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+    }
+    .nav-links a:hover::after { transform: scaleX(1); }
+    .nav-links a:hover { color: var(--leaf-deep); }
+    .nav-cta {
+      background: linear-gradient(135deg, var(--leaf), var(--blue));
+      color: #fff;
+      padding: 0.6rem 1.4rem; border-radius: 6px;
+      text-decoration: none; font-size: 0.9rem; font-weight: 600;
+      transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 6px 18px rgba(21, 128, 61,0.28);
+    }
+    .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 10px 26px rgba(21, 128, 61,0.38); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex; align-items: center;
+      padding: 8rem 4rem 4rem;
+      position: relative; overflow: hidden;
+    }
+    #hero-particles {
+      position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    }
+    .hero-bg {
+      position: absolute; inset: -10%; z-index: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 75% 30%, rgba(37, 99, 235,0.22) 0%, transparent 70%),
+        radial-gradient(ellipse 45% 60% at 15% 85%, rgba(21, 128, 61,0.22) 0%, transparent 60%),
+        linear-gradient(160deg, #F0FDF4 0%, #F0F9FF 100%);
+      animation: heroDrift 16s ease-in-out infinite alternate;
+    }
+    .orb {
+      position: absolute; border-radius: 50%; filter: blur(50px);
+      opacity: 0.55; z-index: 0; pointer-events: none;
+    }
+    .orb1 { width: 320px; height: 320px; background: radial-gradient(circle, var(--leaf), transparent 70%); top: 8%; right: 12%; animation: floatBlob 9s ease-in-out infinite; }
+    .orb2 { width: 260px; height: 260px; background: radial-gradient(circle, var(--blue), transparent 70%); bottom: 10%; left: 6%; animation: floatBlob 11s ease-in-out infinite reverse; }
+    .orb3 { width: 160px; height: 160px; background: radial-gradient(circle, var(--gold), transparent 70%); top: 45%; left: 42%; animation: floatBlob 7s ease-in-out infinite; opacity: 0.35; }
+    .petal { position: absolute; z-index: 1; font-size: 1.4rem; opacity: 0.55; animation: driftDown linear infinite; pointer-events: none; }
+    .hero-grain {
+      position: absolute; inset: 0; z-index: 1; opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    }
+    .hero-content { position: relative; z-index: 2; max-width: 700px; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: rgba(255,255,255,0.7); border: 1px solid rgba(21, 128, 61,0.35);
+      padding: 0.4rem 1rem; border-radius: 100px;
+      font-size: 0.8rem; color: var(--leaf-deep); font-weight: 600;
+      margin-bottom: 1.8rem;
+      box-shadow: 0 4px 16px rgba(30, 58, 138,0.08);
+      animation: fadeUp 0.8s ease both;
+    }
+    .hero-badge .dot { position: relative; width: 6px; height: 6px; background: var(--leaf); border-radius: 50%; animation: pulse 2s infinite; }
+    .hero-badge .dot::after {
+      content: ''; position: absolute; inset: -6px; border-radius: 50%;
+      border: 1.5px solid var(--leaf); animation: ringPing 2s ease-out infinite;
+    }
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(3rem, 6vw, 5.5rem);
+      font-weight: 900; line-height: 1.05;
+      margin-bottom: 1.5rem;
+      animation: fadeUp 0.8s 0.1s ease both;
+    }
+    .hero-title .saffron {
+      color: #FF9933;
+      animation: wordUp 0.7s cubic-bezier(.16,1,.3,1) forwards;
+    }
+    .hero-title .accent {
+      color: #FFFFFF;
+      text-shadow: 0 2px 12px rgba(20,83,45,0.5), 0 1px 3px rgba(15,40,24,0.35);
+      animation: wordUp 0.7s cubic-bezier(.16,1,.3,1) forwards;
+    }
+    .hero-title .gold {
+      color: #15803D;
+      animation: wordUp 0.7s cubic-bezier(.16,1,.3,1) forwards;
+    }
+    .hero-title .deepgreen {
+      color: #14532D;
+      animation: wordUp 0.7s cubic-bezier(.16,1,.3,1) forwards;
+    }
+    .hero-sub {
+      font-size: 1.15rem; color: var(--text-muted); line-height: 1.7;
+      max-width: 540px; margin-bottom: 2.5rem;
+      animation: fadeUp 0.8s 0.2s ease both;
+    }
+    .hero-actions {
+      display: flex; gap: 1rem; flex-wrap: wrap;
+      animation: fadeUp 0.8s 0.3s ease both;
+    }
+    .btn-primary {
+      position: relative; overflow: hidden;
+      background: linear-gradient(135deg, var(--leaf), var(--blue));
+      color: #fff; padding: 0.9rem 2rem; border-radius: 8px;
+      text-decoration: none; font-weight: 600; font-size: 1rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 8px 26px rgba(21, 128, 61,0.32);
+      will-change: transform;
+    }
+    .btn-primary:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 14px 36px rgba(37, 99, 235,0.45); }
+    .btn-secondary {
+      position: relative; overflow: hidden;
+      border: 1.5px solid rgba(21, 128, 61,0.4); color: var(--leaf-deep);
+      background: rgba(255,255,255,0.6);
+      padding: 0.9rem 2rem; border-radius: 8px;
+      text-decoration: none; font-weight: 600; font-size: 1rem;
+      transition: background 0.2s, border-color 0.2s, transform 0.2s;
+      will-change: transform;
+    }
+    .btn-secondary:hover { background: rgba(21, 128, 61,0.1); border-color: var(--leaf); transform: translateY(-2px) scale(1.03); }
+    .ripple {
+      position: absolute; border-radius: 50%; transform: scale(0);
+      background: rgba(255,255,255,0.55); pointer-events: none;
+      animation: rippleOut 0.6s ease-out forwards;
+    }
+
+    .hero-visual {
+      position: absolute; right: 4rem; top: 50%; transform: translateY(-50%);
+      z-index: 2; animation: fadeUp 0.8s 0.4s ease both, floatY 5s ease-in-out 1.2s infinite;
+    }
+    .price-card {
+      background: rgba(255,255,255,0.78); backdrop-filter: blur(14px);
+      border: 1px solid rgba(21, 128, 61,0.25); border-radius: 16px;
+      padding: 1.5rem 2rem; min-width: 280px;
+      box-shadow: 0 20px 60px rgba(30, 58, 138,0.15);
+    }
+    .price-card h4 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 1rem; }
+    .price-row { display: flex; justify-content: space-between; align-items: center; padding: 0.7rem 0; border-bottom: 1px solid rgba(30, 58, 138,0.08); }
+    .price-row:last-child { border-bottom: none; }
+    .price-label { font-size: 0.9rem; color: var(--text-muted); }
+    .price-val { font-size: 1.1rem; font-weight: 700; }
+    .price-val.low { color: #DC2626; }
+    .price-val.high { color: var(--blue-deep); }
+    .price-val.profit { color: var(--leaf-deep); font-size: 1.3rem; }
+    .gap-label {
+      text-align: center; margin-top: 1rem;
+      font-size: 0.8rem; color: var(--text-muted);
+    }
+    .gap-label strong { color: var(--leaf-deep); }
+
+    /* ── STATS STRIP ── */
+    .stats-strip {
+      background: linear-gradient(135deg, var(--leaf-deep), var(--blue-deep));
+      border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+      padding: 2rem 4rem;
+      display: grid; grid-template-columns: repeat(4,1fr); gap: 2rem;
+      text-align: center;
+    }
+    .stat-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.5rem; font-weight: 900; color: #fff;
+    }
+    .stat-label { font-size: 0.85rem; color: rgba(255,255,255,0.78); margin-top: 0.3rem; }
+
+    /* ── SECTION BASE ── */
+    section { padding: 6rem 4rem; }
+    .section-tag {
+      display: inline-block;
+      font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px;
+      color: var(--leaf-deep); font-weight: 700; margin-bottom: 0.8rem;
+    }
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 900; line-height: 1.15; margin-bottom: 1.2rem;
+      color: var(--text-main);
+    }
+    .section-sub { font-size: 1rem; color: var(--text-muted); line-height: 1.7; max-width: 560px; }
+
+    /* ── PROBLEM SECTION ── */
+    .problem { background: var(--sand); }
+    .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; margin-top: 4rem; }
+    .problem-cards { display: flex; flex-direction: column; gap: 1.2rem; }
+    .p-card {
+      background: rgba(255,255,255,0.85); border: 1px solid var(--line);
+      border-radius: 12px; padding: 1.4rem 1.6rem;
+      display: flex; gap: 1rem; align-items: flex-start;
+      box-shadow: 0 6px 20px rgba(30, 58, 138,0.05);
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    }
+    .p-card:hover { border-color: rgba(21, 128, 61,0.4); transform: translateX(4px); box-shadow: 0 10px 26px rgba(30, 58, 138,0.1); }
+    .p-icon { font-size: 1.6rem; flex-shrink: 0; }
+    .p-card h4 { font-size: 1rem; font-weight: 700; margin-bottom: 0.3rem; color: var(--text-main); }
+    .p-card p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; }
+
+    .flow-visual { display: flex; flex-direction: column; gap: 0; }
+    .flow-node {
+      background: rgba(255,255,255,0.85); border: 1px solid var(--line);
+      border-radius: 12px; padding: 1.2rem 1.5rem;
+      display: flex; align-items: center; gap: 1rem;
+      box-shadow: 0 6px 20px rgba(30, 58, 138,0.05);
+    }
+    .flow-node.bad { border-color: rgba(220, 38, 38,0.4); background: rgba(254, 242, 242,0.85); }
+    .flow-node.good { border-color: rgba(21, 128, 61,0.5); background: rgba(220, 252, 231,0.9); }
+    .flow-arrow {
+      position: relative;
+      text-align: center; font-size: 1.4rem; padding: 0.3rem 0; color: var(--text-muted);
+    }
+    .flow-arrow::before {
+      content: ''; position: absolute; left: 50%; top: -0.2rem;
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--leaf); transform: translateX(-50%);
+      animation: flowPulse 1.8s ease-in-out infinite;
+    }
+    .flow-arrow.x::before { background: #DC2626; }
+    .flow-arrow.check::before { background: var(--leaf-deep); }
+    .flow-arrow.x { color: #DC2626; }
+    .flow-arrow.check { color: var(--leaf-deep); }
+    .flow-icon { font-size: 1.5rem; }
+    .flow-info h5 { font-size: 0.9rem; font-weight: 700; color: var(--text-main); }
+    .flow-info p { font-size: 0.8rem; color: var(--text-muted); }
+    .flow-tag {
+      margin-left: auto; font-size: 0.7rem; font-weight: 700;
+      padding: 0.2rem 0.6rem; border-radius: 4px; text-transform: uppercase;
+    }
+    .flow-tag.bad { background: rgba(220, 38, 38,0.15); color: #B91C1C; }
+    .flow-tag.good { background: rgba(21, 128, 61,0.15); color: var(--leaf-deep); }
+
+    /* ── SOLUTION SECTION ── */
+    .solution { background: linear-gradient(160deg, var(--meadow) 0%, var(--sky) 100%); }
+    .solution-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; margin-top: 3.5rem; }
+    .sol-card {
+      background: rgba(255,255,255,0.85); border: 1px solid var(--line);
+      border-radius: 16px; padding: 2rem;
+      box-shadow: 0 10px 30px rgba(30, 58, 138,0.06);
+      transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+      position: relative; overflow: hidden;
+    }
+    .sol-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--leaf), var(--blue));
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .sol-card:hover { transform: translateY(-6px); border-color: rgba(21, 128, 61,0.4); box-shadow: 0 24px 50px rgba(30, 58, 138,0.14); }
+    .sol-card:hover::before { opacity: 1; }
+    .sol-num {
+      font-family: 'Playfair Display', serif; font-size: 3rem; font-weight: 900; line-height: 1; margin-bottom: 1rem;
+      background: linear-gradient(135deg, var(--leaf), var(--blue));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      opacity: 0.9;
+    }
+    .sol-icon { font-size: 2rem; margin-bottom: 1rem; }
+    .sol-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.6rem; color: var(--text-main); }
+    .sol-card p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; }
+
+    /* ── IMPACT SECTION ── */
+    .impact { background: var(--sand); }
+    .impact-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 1.5rem; margin-top: 3.5rem; }
+    .impact-card {
+      background: rgba(255,255,255,0.85); border: 1px solid var(--line);
+      border-radius: 16px; padding: 2rem 1.5rem; text-align: center;
+      box-shadow: 0 8px 24px rgba(30, 58, 138,0.06);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .impact-card:hover { transform: translateY(-4px); box-shadow: 0 18px 40px rgba(30, 58, 138,0.12); }
+    .impact-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+    .impact-pct {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.5rem; font-weight: 900; margin-bottom: 0.3rem;
+      background: linear-gradient(135deg, var(--leaf-deep), var(--blue-deep));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .impact-card h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--text-main); }
+    .impact-card p { font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; }
+
+    /* ── ANALOGY QUOTE ── */
+    .analogy {
+      background: linear-gradient(120deg, var(--leaf-deep), var(--blue-deep), var(--leaf), var(--blue-deep));
+      background-size: 300% 300%;
+      animation: shimmerBg 10s ease infinite;
+      border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+      padding: 5rem 4rem; text-align: center;
+    }
+    .quote-mark { font-family: 'Playfair Display', serif; font-size: 8rem; color: rgba(255,255,255,0.18); line-height: 0.5; display: block; margin-bottom: 1rem; }
+    .quote-text {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+      line-height: 1.6; max-width: 800px; margin: 0 auto 1.5rem;
+      color: #fff;
+    }
+    .quote-text .hl { color: #BBF7D0; }
+    .quote-attr { font-size: 0.85rem; color: rgba(255,255,255,0.75); }
+
+    /* ── CTA SECTION ── */
+    .cta-section {
+      background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(21, 128, 61,0.14) 0%, transparent 70%), var(--meadow);
+      padding: 7rem 4rem; text-align: center;
+    }
+    .cta-section .section-title { max-width: 600px; margin: 0 auto 1rem; }
+    .cta-section .section-sub { margin: 0 auto 2.5rem; text-align: center; }
+    .cta-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: linear-gradient(135deg, var(--leaf-deep), var(--blue-deep)); border-top: 1px solid var(--line);
+      padding: 2rem 4rem; display: flex; justify-content: space-between; align-items: center;
+    }
+    .footer-logo { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 900; color: #fff; }
+    .footer-logo span { color: #BBF7D0; }
+    footer p { font-size: 0.82rem; color: rgba(255,255,255,0.75); }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.5; transform: scale(1.5); }
+    }
+    @keyframes ringPing {
+      0% { transform: scale(0.6); opacity: 0.9; }
+      100% { transform: scale(2.4); opacity: 0; }
+    }
+    @keyframes gradientSweep {
+      0%, 100% { background-position: 0% 50%; }
+      50%      { background-position: 100% 50%; }
+    }
+    @keyframes heroDrift {
+      0%   { transform: translate(0,0) rotate(0deg); }
+      100% { transform: translate(-2%,2%) rotate(2deg); }
+    }
+    @keyframes floatBlob {
+      0%, 100% { transform: translate(0,0) scale(1); }
+      50%      { transform: translate(-18px, 22px) scale(1.08); }
+    }
+    @keyframes driftDown {
+      0%   { transform: translateY(-10%) translateX(0) rotate(0deg); opacity: 0; }
+      10%  { opacity: 0.6; }
+      90%  { opacity: 0.5; }
+      100% { transform: translateY(110vh) translateX(30px) rotate(200deg); opacity: 0; }
+    }
+    @keyframes floatY {
+      0%, 100% { transform: translateY(-50%); }
+      50%      { transform: translateY(calc(-50% - 14px)); }
+    }
+    @keyframes rippleOut {
+      to { transform: scale(3.2); opacity: 0; }
+    }
+    @keyframes countPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.12); }
+      100% { transform: scale(1); }
+    }
+    @keyframes borderSpin {
+      to { --a: 360deg; }
+    }
+    @keyframes flowPulse {
+      0%   { transform: translateY(0); opacity: 0; }
+      15%  { opacity: 1; }
+      85%  { opacity: 1; }
+      100% { transform: translateY(1.4rem); opacity: 0; }
+    }
+    @keyframes shimmerBg {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .reveal {
+      opacity: 0; transform: translateY(36px) scale(0.96);
+      filter: blur(6px);
+      transition: opacity 0.8s cubic-bezier(.16,1,.3,1), transform 0.8s cubic-bezier(.16,1,.3,1), filter 0.8s ease;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+
+    .sol-card, .impact-card, .p-card {
+      transform-style: preserve-3d;
+      transition: transform 0.25s ease-out, border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .count-pop { animation: countPulse 0.4s ease; }
+
+    #scroll-progress {
+      position: fixed; top: 0; left: 0; height: 3px; width: 0%;
+      background: linear-gradient(90deg, var(--leaf), var(--blue), var(--gold));
+      background-size: 200% 100%;
+      animation: shimmerBg 3s linear infinite;
+      z-index: 999; transition: width 0.1s linear;
+    }
+    #cursor-glow {
+      position: fixed; width: 380px; height: 380px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(21, 128, 61,0.14), rgba(37, 99, 235,0.08) 45%, transparent 70%);
+      pointer-events: none; z-index: 1; transform: translate(-50%,-50%);
+      left: 0; top: 0; opacity: 0; transition: opacity 0.4s ease;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+    }
+
+    @media (max-width: 900px) {
+      nav { padding: 1rem 1.5rem; }
+      .nav-links { display: none; }
+      section { padding: 4rem 1.5rem; }
+      .hero { padding: 7rem 1.5rem 4rem; }
+      .hero-visual { display: none; }
+      .problem-grid, .solution-grid, .impact-grid { grid-template-columns: 1fr; }
+      .stats-strip { grid-template-columns: repeat(2,1fr); padding: 2rem 1.5rem; }
+      footer { flex-direction: column; gap: 1rem; text-align: center; }
+    }
+
+    @media (min-width: 901px) and (max-width: 1180px) {
+      .solution-grid { grid-template-columns: repeat(2,1fr); }
+    }
+
+    @media (max-width: 900px) {
+      .orb, .petal, #cursor-glow { display: none; }
+    }
+    @media (pointer: coarse) {
+      #cursor-glow { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="preloader"><div class="pl-mark">Nexora</div><div class="pl-bar"></div></div>
+<div id="cursor-dot"></div>
+<div id="cursor-ring"></div>
+<div id="page-grain"></div>
+<div id="cursor-glow"></div>
+<div id="scroll-progress"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Nex<span>ora</span></div>
+  <ul class="nav-links">
+    <li><a href="#problem">Problem</a></li>
+    <li><a href="#solution">Solution</a></li>
+    <li><a href="#impact">Impact</a></li>
+    <li><a href="auth.html?role=farmer">Farmer</a></li>
+    <li><a href="auth.html?role=buyer">Buyer</a></li>
+  </ul>
+  <a href="auth.html" class="nav-cta">Get Started →</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grain"></div>
+  <canvas id="hero-particles"></canvas>
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+  <span class="petal" style="left:8%; animation-duration:14s; animation-delay:0s;">🌿</span>
+  <span class="petal" style="left:22%; animation-duration:18s; animation-delay:2s; font-size:1rem;">🍃</span>
+  <span class="petal" style="left:38%; animation-duration:16s; animation-delay:5s;">🌾</span>
+  <span class="petal" style="left:60%; animation-duration:20s; animation-delay:1s; font-size:1.1rem;">🍃</span>
+  <span class="petal" style="left:78%; animation-duration:15s; animation-delay:4s;">🌿</span>
+  <span class="petal" style="left:90%; animation-duration:19s; animation-delay:7s; font-size:1rem;">🌾</span>
+  <div class="hero-content">
+    <div class="hero-badge"><span class="dot"></span> India's First Direct Farm-to-Industry B2B Platform</div>
+    <h1 class="hero-title">
+      <span class="word saffron" style="animation-delay:.05s">Eliminating</span><br>
+      <span class="word accent" style="animation-delay:.2s">Middlemen,</span><br>
+      <span class="word gold" style="animation-delay:.35s">Empowering</span> <span class="word deepgreen" style="animation-delay:.48s">Farmers.</span>
+    </h1>
+    <p class="hero-sub">
+      Nexora connects farmers directly to factories, processing industries & bulk buyers — 
+      so every rupee of profit stays where it belongs.
+    </p>
+    <div class="hero-actions">
+      <a href="auth.html?role=farmer" class="btn-primary">I'm a Farmer →</a>
+      <a href="auth.html?role=buyer" class="btn-secondary">I'm a Buyer</a>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="price-card glow-border">
+      <h4>📊 Price Reality Check — Cotton</h4>
+      <div class="price-row">
+        <span class="price-label">Farmer receives</span>
+        <span class="price-val low">₹7,000/qtl</span>
+      </div>
+      <div class="price-row">
+        <span class="price-label">Industry pays</span>
+        <span class="price-val high">₹15,000/qtl</span>
+      </div>
+      <div class="price-row">
+        <span class="price-label">Middlemen pocket</span>
+        <span class="price-val profit">₹8,000/qtl</span>
+      </div>
+      <p class="gap-label">With Nexora: <strong>Farmer gets ₹15,000</strong> ✓</p>
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE TICKER -->
+<div class="marquee">
+  <div class="marquee-track">
+    <span>🌾 Cotton</span><span>🌾 Wheat</span><span>🌾 Sugarcane</span><span>🌾 Soybean</span><span>🌾 Onion</span><span>🌾 Turmeric</span><span>🌾 Rice</span><span>🌾 Pulses</span><span>🌾 Zero Middlemen</span><span>🌾 100% Transparent Pricing</span>
+    <span>🌾 Cotton</span><span>🌾 Wheat</span><span>🌾 Sugarcane</span><span>🌾 Soybean</span><span>🌾 Onion</span><span>🌾 Turmeric</span><span>🌾 Rice</span><span>🌾 Pulses</span><span>🌾 Zero Middlemen</span><span>🌾 100% Transparent Pricing</span>
+  </div>
+</div>
+
+<!-- STATS STRIP -->
+<div class="stats-strip">
+  <div class="reveal">
+    <div class="stat-num" data-count-to="58" data-suffix="M+">58M+</div>
+    <div class="stat-label">Farmers in India losing to middlemen</div>
+  </div>
+  <div class="reveal">
+    <div class="stat-num" data-count-to="8" data-prefix="₹" data-suffix="K">₹8K</div>
+    <div class="stat-label">Lost per quintal on average</div>
+  </div>
+  <div class="reveal">
+    <div class="stat-num" data-count-to="80" data-suffix="%">80%</div>
+    <div class="stat-label">Potential income increase with direct access</div>
+  </div>
+  <div class="reveal">
+    <div class="stat-num">0</div>
+    <div class="stat-label">Middlemen needed on Nexora</div>
+  </div>
+</div>
+
+<!-- PROBLEM SECTION -->
+<section class="problem" id="problem">
+  <div class="section-tag">The Problem</div>
+  <h2 class="section-title">The Invisible Loss<br>Farmers Face Every Harvest</h2>
+  <p class="section-sub">Farmers don't just struggle with nature — they struggle with a rigged market that steals their hard-earned value.</p>
+  <div class="problem-grid">
+    <div class="problem-cards reveal">
+      <div class="p-card">
+        <div class="p-icon">💸</div>
+        <div>
+          <h4>Middlemen Exploitation</h4>
+          <p>Farmers are forced to sell at rock-bottom prices to intermediaries who flip it to industry at 2x the price.</p>
+        </div>
+      </div>
+      <div class="p-card">
+        <div class="p-icon">🚫</div>
+        <div>
+          <h4>No Direct Industry Access</h4>
+          <p>Factories, processing units & bulk buyers are unreachable for individual farmers without a network.</p>
+        </div>
+      </div>
+      <div class="p-card">
+        <div class="p-icon">📉</div>
+        <div>
+          <h4>Zero Price Transparency</h4>
+          <p>Farmers don't know what the market actually pays. Hidden rates keep them in the dark permanently.</p>
+        </div>
+      </div>
+      <div class="p-card">
+        <div class="p-icon">⏳</div>
+        <div>
+          <h4>Months of Work, Minimal Return</h4>
+          <p>After an entire growing season, the final income doesn't reflect the labor or investment put in.</p>
+        </div>
+      </div>
+    </div>
+    <div class="flow-visual reveal">
+      <div class="flow-node bad">
+        <div class="flow-icon">👨‍🌾</div>
+        <div class="flow-info"><h5>Farmer</h5><p>Sells cotton at ₹7,000/qtl</p></div>
+        <span class="flow-tag bad">Before</span>
+      </div>
+      <div class="flow-arrow x">↓ &nbsp; Forced sale</div>
+      <div class="flow-node bad">
+        <div class="flow-icon">🕵️</div>
+        <div class="flow-info"><h5>Middleman</h5><p>Pockets ₹8,000 doing nothing</p></div>
+        <span class="flow-tag bad">Exploit</span>
+      </div>
+      <div class="flow-arrow x">↓ &nbsp; Resells at 2x</div>
+      <div class="flow-node bad">
+        <div class="flow-icon">🏭</div>
+        <div class="flow-info"><h5>Industry</h5><p>Pays ₹15,000/qtl to middleman</p></div>
+        <span class="flow-tag bad">End buyer</span>
+      </div>
+      <br>
+      <div class="flow-node good">
+        <div class="flow-icon">👨‍🌾</div>
+        <div class="flow-info"><h5>Farmer on Nexora</h5><p>Gets full ₹15,000/qtl</p></div>
+        <span class="flow-tag good">After</span>
+      </div>
+      <div class="flow-arrow check">↓ &nbsp; Direct connection</div>
+      <div class="flow-node good">
+        <div class="flow-icon">🏭</div>
+        <div class="flow-info"><h5>Industry / Buyer</h5><p>Buys directly, saves cost too</p></div>
+        <span class="flow-tag good">Win-Win</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SOLUTION SECTION -->
+<section class="solution" id="solution">
+  <div class="section-tag">The Smart Solution</div>
+  <h2 class="section-title">A Direct B2B Marketplace<br>Built for Bharat</h2>
+  <p class="section-sub">One platform. Zero middlemen. Full transparency. Nexora removes the middle layer and connects farmers directly to buyers.</p>
+  <div class="solution-grid">
+    <div class="sol-card reveal glow-border">
+      <div class="sol-num">01</div>
+      <div class="sol-icon">📲</div>
+      <h3>Farmer Listings</h3>
+      <p>Farmers upload crop details — type, quantity, location — and set their expected price or accept competitive bids from verified buyers.</p>
+    </div>
+    <div class="sol-card reveal glow-border">
+      <div class="sol-num">02</div>
+      <div class="sol-icon">🔍</div>
+      <h3>Industry Search & Bidding</h3>
+      <p>Factories and bulk buyers search by crop, region, and quantity. They contact farmers directly and place bulk orders — no phone tree, no broker.</p>
+    </div>
+    <div class="sol-card reveal glow-border">
+      <div class="sol-num">03</div>
+      <div class="sol-icon">🤖</div>
+      <h3>Smart Matching Engine</h3>
+      <p>Our AI suggests the best farmer-buyer pairs based on location proximity, demand patterns, and live price trends in the market.</p>
+    </div>
+    <div class="sol-card reveal glow-border">
+      <div class="sol-num">04</div>
+      <div class="sol-icon">📊</div>
+      <h3>Live Price Transparency</h3>
+      <p>Every farmer can see what industries are actually paying today. No more guessing. No more manipulation. Just fair market data.</p>
+    </div>
+    <div class="sol-card reveal glow-border">
+      <div class="sol-num">05</div>
+      <div class="sol-icon">🛡️</div>
+      <h3>Verified B2B Trust Layer</h3>
+      <p>Every buyer is verified. Every transaction is tracked. Farmers deal only with legitimate factories and certified buyers.</p>
+    </div>
+    <div class="sol-card reveal glow-border">
+      <div class="sol-num">06</div>
+      <div class="sol-icon">📱</div>
+      <h3>Mobile-First, Low-Tech Friendly</h3>
+      <p>Built for rural India. Works on low-end smartphones, supports regional languages, with a UI any farmer can use in minutes.</p>
+    </div>
+    <div class="sol-card reveal glow-border">
+      <div class="sol-num">07</div>
+      <div class="sol-icon">🌱</div>
+      <h3>AI Crop Advisory</h3>
+      <p>Get instant, AI-driven guidance on soil health and crop suitability. Nexora verifies soil conditions and recommends what to grow, when to sow, and how to improve yield.</p>
+    </div>
+    <div class="sol-card reveal glow-border">
+      <div class="sol-num">08</div>
+      <div class="sol-icon">📸</div>
+      <h3>Quality Transparency</h3>
+      <p>Farmers submit photos of their harvest and our AI analyzes crop quality automatically. Buyers can view the real photos themselves before placing a bid — no surprises, no disputes.</p>
+    </div>
+    <div class="sol-card reveal glow-border">
+      <div class="sol-num">09</div>
+      <div class="sol-icon">💬</div>
+      <h3>Live Chat, Powered by Socket.io</h3>
+      <p>Real-time messaging between farmers and buyers lets both sides negotiate, confirm details, and close deals instantly — direct conversation, zero delay.</p>
+    </div>
+  </div>
+</section>
+
+<!-- IMPACT SECTION -->
+<section class="impact" id="impact">
+  <div class="section-tag">Impact Analysis</div>
+  <h2 class="section-title">Real Numbers.<br>Real Change.</h2>
+  <p class="section-sub">Nexora isn't just a product — it's a financial revolution for 58 million Indian farmers.</p>
+  <div class="impact-grid">
+    <div class="impact-card reveal glow-border">
+      <div class="impact-icon">💰</div>
+      <div class="impact-pct">30–80%</div>
+      <h4>Income Increase</h4>
+      <p>Direct access to buyers means farmers keep the profit that middlemen used to steal.</p>
+    </div>
+    <div class="impact-card reveal glow-border">
+      <div class="impact-icon">⚡</div>
+      <div class="impact-pct" data-count-to="10" data-suffix="×">10×</div>
+      <h4>Faster Selling</h4>
+      <p>Smart matching reduces the time from harvest to sale from weeks to hours.</p>
+    </div>
+    <div class="impact-card reveal glow-border">
+      <div class="impact-icon">🔎</div>
+      <div class="impact-pct" data-count-to="100" data-suffix="%">100%</div>
+      <h4>Price Transparency</h4>
+      <p>Every price is visible, every transaction tracked. Zero hidden cuts, ever.</p>
+    </div>
+    <div class="impact-card reveal glow-border">
+      <div class="impact-icon">🌾</div>
+      <div class="impact-pct">All</div>
+      <h4>Crop Industries</h4>
+      <p>Works for cotton, wheat, sugarcane, soybean, pulses — scalable to every crop.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ANALOGY QUOTE -->
+<div class="analogy reveal">
+  <span class="quote-mark">"</span>
+  <p class="quote-text">
+    10 years ago, no one imagined <span class="hl">Blinkit delivering groceries</span> in 10 minutes. 
+    Today, it has reduced dependency on local intermediaries. 
+    <span class="hl">Nexora does the same for agriculture</span> — 
+    connecting farmers directly to industries, the same way the internet once connected buyers directly to sellers.
+  </p>
+  <p class="quote-attr">— Nexora Vision Statement</p>
+</div>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="section-tag">Join the Revolution</div>
+  <h2 class="section-title">Your harvest deserves<br>its true value.</h2>
+  <p class="section-sub">Whether you grow crops or buy them at scale — Nexora is built for you.</p>
+  <div class="cta-actions">
+    <a href="auth.html?role=farmer" class="btn-primary">🌾 Join as Farmer</a>
+    <a href="auth.html?role=buyer" class="btn-secondary">🏭 Join as Industry Buyer</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Nex<span>ora</span></div>
+  <p>Nexora Business Help Tank · Hackathon 2025</p>
+  <p>Eliminating Middlemen, Empowering Farmers.</p>
+</footer>
+
+<script>
+  // ── Scroll reveal (original, unchanged behavior) ──
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), i * 80);
+      }
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // ── Cursor spotlight glow ──
+  const glow = document.getElementById('cursor-glow');
+  if (glow && matchMedia('(pointer:fine)').matches) {
+    document.addEventListener('mousemove', (e) => {
+      glow.style.left = e.clientX + 'px';
+      glow.style.top = e.clientY + 'px';
+      glow.style.opacity = '1';
+    });
+    document.addEventListener('mouseleave', () => glow.style.opacity = '0');
+  }
+
+  // ── Scroll progress bar ──
+  const progressBar = document.getElementById('scroll-progress');
+  window.addEventListener('scroll', () => {
+    const h = document.documentElement;
+    const scrolled = (h.scrollTop) / (h.scrollHeight - h.clientHeight) * 100;
+    if (progressBar) progressBar.style.width = scrolled + '%';
+  }, { passive: true });
+
+  // ── Magnetic buttons + ripple ──
+  document.querySelectorAll('.btn-primary, .btn-secondary, .nav-cta').forEach(btn => {
+    btn.addEventListener('mousemove', (e) => {
+      if (!matchMedia('(pointer:fine)').matches) return;
+      const r = btn.getBoundingClientRect();
+      const x = e.clientX - r.left - r.width / 2;
+      const y = e.clientY - r.top - r.height / 2;
+      btn.style.transform = `translate(${x * 0.12}px, ${y * 0.3}px)`;
+    });
+    btn.addEventListener('mouseleave', () => { btn.style.transform = ''; });
+    btn.addEventListener('click', function (e) {
+      const r = this.getBoundingClientRect();
+      const ripple = document.createElement('span');
+      ripple.className = 'ripple';
+      const size = Math.max(r.width, r.height) * 1.4;
+      ripple.style.width = ripple.style.height = size + 'px';
+      ripple.style.left = (e.clientX - r.left - size / 2) + 'px';
+      ripple.style.top = (e.clientY - r.top - size / 2) + 'px';
+      this.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 650);
+    });
+  });
+
+  // ── 3D tilt on cards ──
+  document.querySelectorAll('.sol-card, .impact-card, .p-card').forEach(card => {
+    card.addEventListener('mousemove', (e) => {
+      if (!matchMedia('(pointer:fine)').matches) return;
+      const r = card.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width - 0.5;
+      const py = (e.clientY - r.top) / r.height - 0.5;
+      card.style.transform = `perspective(700px) rotateX(${py * -8}deg) rotateY(${px * 8}deg) translateY(-4px)`;
+    });
+    card.addEventListener('mouseleave', () => { card.style.transform = ''; });
+  });
+
+  // ── Count-up numbers on scroll into view ──
+  const counters = document.querySelectorAll('[data-count-to]');
+  const countObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting || entry.target.dataset.counted) return;
+      entry.target.dataset.counted = 'true';
+      const el = entry.target;
+      const target = parseFloat(el.dataset.countTo);
+      const prefix = el.dataset.prefix || '';
+      const suffix = el.dataset.suffix || '';
+      const duration = 1300;
+      const start = performance.now();
+      function tick(now) {
+        const p = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = prefix + Math.round(eased * target) + suffix;
+        if (p < 1) requestAnimationFrame(tick);
+        else el.classList.add('count-pop');
+      }
+      requestAnimationFrame(tick);
+    });
+  }, { threshold: 0.5 });
+  counters.forEach(c => countObserver.observe(c));
+
+  // ── Subtle parallax on hero background while scrolling ──
+  const heroBg = document.querySelector('.hero-bg');
+  window.addEventListener('scroll', () => {
+    if (!heroBg) return;
+    const y = window.scrollY;
+    if (y < window.innerHeight) heroBg.style.transform = `translateY(${y * 0.15}px)`;
+  }, { passive: true });
+</script>
+
+<!-- Purely decorative visual-effects script — no links, no backend calls -->
+<script>
+  // ── Preloader ──
+  window.addEventListener('load', () => {
+    const pl = document.getElementById('preloader');
+    if (pl) setTimeout(() => pl.classList.add('done'), 350);
+  });
+
+  // ── Custom cursor (dot + lagging ring) ──
+  const cDot = document.getElementById('cursor-dot');
+  const cRing = document.getElementById('cursor-ring');
+  if (cDot && cRing && matchMedia('(pointer:fine)').matches) {
+    let mx = 0, my = 0, rx = 0, ry = 0;
+    document.addEventListener('mousemove', (e) => {
+      mx = e.clientX; my = e.clientY;
+      cDot.style.left = mx + 'px'; cDot.style.top = my + 'px';
+    });
+    (function animateRing() {
+      rx += (mx - rx) * 0.15; ry += (my - ry) * 0.15;
+      cRing.style.left = rx + 'px'; cRing.style.top = ry + 'px';
+      requestAnimationFrame(animateRing);
+    })();
+    document.querySelectorAll('a, button, .sol-card, .impact-card, .p-card, .role-btn, .tab').forEach(el => {
+      el.addEventListener('mouseenter', () => cRing.classList.add('hover'));
+      el.addEventListener('mouseleave', () => cRing.classList.remove('hover'));
+    });
+  }
+
+  // ── Hero particle network (canvas) ──
+  (function () {
+    const canvas = document.getElementById('hero-particles');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const hero = document.querySelector('.hero');
+    let w, h, particles = [];
+    const COUNT = matchMedia('(max-width:900px)').matches ? 26 : 55;
+    let mouse = { x: -9999, y: -9999 };
+
+    function resize() {
+      w = canvas.width = hero.offsetWidth;
+      h = canvas.height = hero.offsetHeight;
+    }
+    function init() {
+      particles = Array.from({ length: COUNT }, () => ({
+        x: Math.random() * w, y: Math.random() * h,
+        vx: (Math.random() - 0.5) * 0.35, vy: (Math.random() - 0.5) * 0.35,
+        r: Math.random() * 1.6 + 0.8
+      }));
+    }
+    function tick() {
+      ctx.clearRect(0, 0, w, h);
+      particles.forEach(p => {
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0 || p.x > w) p.vx *= -1;
+        if (p.y < 0 || p.y > h) p.vy *= -1;
+        const dx = mouse.x - p.x, dy = mouse.y - p.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 120) { p.x -= dx * 0.008; p.y -= dy * 0.008; }
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(21, 128, 61,0.45)';
+        ctx.fill();
+      });
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const a = particles[i], b = particles[j];
+          const dx = a.x - b.x, dy = a.y - b.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 110) {
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+            ctx.strokeStyle = `rgba(37, 99, 235,${0.18 * (1 - dist / 110)})`;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          }
+        }
+      }
+      requestAnimationFrame(tick);
+    }
+    if (hero) {
+      resize();
+      init();
+      tick();
+      window.addEventListener('resize', () => { resize(); init(); });
+      hero.addEventListener('mousemove', (e) => {
+        const r = hero.getBoundingClientRect();
+        mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top;
+      });
+      hero.addEventListener('mouseleave', () => { mouse.x = -9999; mouse.y = -9999; });
+    }
+  })();
+
+  // ── Click burst particles on primary CTAs ──
+  const BURST_EMOJI = ['🌿', '🍃', '🌾', '✨'];
+  document.querySelectorAll('.btn-primary, .btn-secondary, .nav-cta').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      for (let i = 0; i < 8; i++) {
+        const p = document.createElement('span');
+        p.className = 'burst-particle';
+        p.textContent = BURST_EMOJI[Math.floor(Math.random() * BURST_EMOJI.length)];
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 40 + Math.random() * 50;
+        p.style.setProperty('--bx', Math.cos(angle) * dist + 'px');
+        p.style.setProperty('--by', Math.sin(angle) * dist + 'px');
+        p.style.setProperty('--br', (Math.random() * 360) + 'deg');
+        p.style.left = e.clientX + 'px';
+        p.style.top = e.clientY + 'px';
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 900);
+      }
+    });
+  });
+</script>
+</body>
+</html>
