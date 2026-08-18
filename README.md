@@ -1,5 +1,6 @@
 # 🌾 Nexora Agrotech
 
+
 ### **AI-Powered Direct Farm-to-Industry Agricultural Marketplace**
 
 > **From Farm to Industry — Direct, Intelligent, Transparent.**
