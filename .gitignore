@@ -146,3 +146,11 @@ vite.config.ts.timestamp-*
 .DS_Store
 Thumbs.db
 desktop.ini
+
+ml-model/venv/
+ml-model/.venv/
+ml-model/__pycache__/
+__pycache__/
+*.pyc
+.env
+node_modules/

@@ -69,6 +69,10 @@ const NexoraAPI = {
   // ══════════ CHAT (history) ══════════
   getChatHistory(listingId, otherUserId) { return apiRequest(`/api/chat/${listingId}/${otherUserId}`); },
   getInbox() { return apiRequest('/api/chat/inbox/all'); },
+
+  // ══════════ AI SMART MATCHING ══════════
+  smartMatchBuyerToFarmer(payload) { return apiRequest('/api/matching/buyer-to-farmer', { method: 'POST', body: payload, auth: false }); },
+  smartMatchFarmerToBuyer(payload) { return apiRequest('/api/matching/farmer-to-buyer', { method: 'POST', body: payload, auth: false }); },
 };
 
 // ══════════ REAL-TIME CHAT SOCKET ══════════

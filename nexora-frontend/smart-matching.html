@@ -756,7 +756,17 @@
 
           <div class="control-group">
             <label>Min Quantity (qtl)</label>
-            <input type="number" placeholder="50" min="0"
+            <input type="number" id="sm-min-qty" placeholder="50" min="0"
+                   style="width:100%;background:rgba(220, 252, 231,0.8);border:1px solid rgba(21, 128, 61,0.25);border-radius:8px;padding:0.6rem 0.9rem;color:#17352A;font-size:0.85rem;" />
+          </div>
+          <div class="control-group">
+            <label>Max Price (₹/qtl)</label>
+            <input type="number" id="sm-max-price" placeholder="8800" min="0"
+                   style="width:100%;background:rgba(220, 252, 231,0.8);border:1px solid rgba(21, 128, 61,0.25);border-radius:8px;padding:0.6rem 0.9rem;color:#17352A;font-size:0.85rem;" />
+          </div>
+          <div class="control-group">
+            <label>Required By</label>
+            <input type="date" id="sm-required-by"
                    style="width:100%;background:rgba(220, 252, 231,0.8);border:1px solid rgba(21, 128, 61,0.25);border-radius:8px;padding:0.6rem 0.9rem;color:#17352A;font-size:0.85rem;" />
           </div>
           <div class="control-group">
@@ -1432,87 +1442,71 @@
         // Read the buyer's actual filter choices from the form
         const cropSel = document.getElementById("match-crop").value;
         const regionSel = document.getElementById("match-district").value;
-
-        const minQtyVal =
-          parseFloat(
-            document.querySelector('.control-group input[type="number"]').value,
-          ) || 0;
+        const minQtyQtl =
+          parseFloat(document.getElementById("sm-min-qty").value) || 0;
+        const maxPrice =
+          parseFloat(document.getElementById("sm-max-price").value) || 999999; // no ceiling if left blank
+        const requiredBy =
+          document.getElementById("sm-required-by").value ||
+          new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10); // default: 30 days out
         const priority = document.querySelectorAll(".control-group select")[0]
           .value; // Best Price / Closest Location / Highest Demand / Fastest Deal
 
+        // 🔌 Calls the real trained model (Node → FastAPI ml-model → back).
+        // qtl → tons: the model's required_quantity_tons expects tons (1 ton = 10 qtl).
+        const payload = {
+          crop: cropSel && cropSel !== "All Crops" ? cropSel : "",
+          variety: "Not Specified",
+          required_quantity_tons: minQtyQtl / 10,
+          maximum_price_per_quintal: maxPrice,
+          required_by_date: requiredBy,
+          cluster: "",
+          district: regionSel && regionSel !== "All Districts" ? regionSel : "",
+          taluka: "",
+          village: "",
+          top_k: 20,
+        };
+
         try {
-          // Real backend call — only crop filter goes server-side; region/qty/scoring happen client-side
-          const params = { status: "available" };
-          if (cropSel && cropSel !== "All Crops") params.crop = cropSel;
+          const data = await NexoraAPI.smartMatchBuyerToFarmer(payload);
+          let results = data.results || [];
 
-          const listings = await NexoraAPI.getListings(params);
+          // "Match Priority" re-sorts the model's already-ranked results —
+          // the model itself always returns one blended compatibility_score.
+          if (priority === "Best Price") {
+            results = [...results].sort(
+              (a, b) => a.price_per_quintal - b.price_per_quintal,
+            );
+          } else if (priority === "Fastest Deal") {
+            results = [...results].sort(
+              (a, b) => new Date(b.listed_at) - new Date(a.listed_at),
+            );
+          }
+          // "Closest Location" and "Highest Demand" keep the model's own
+          // ranking, since geo-fit and quantity-fit are already baked into
+          // compatibility_score.
 
-          const filteredByDistrict =
-            regionSel && regionSel !== "All Districts"
-              ? listings.filter(
-                  (l) =>
-                    l.district &&
-                    l.district.toLowerCase() === regionSel.toLowerCase(),
-                )
-              : listings;
+          const scored = results.slice(0, 6).map((r) => {
+            const score = Math.round(r.compatibility_score);
+            const color =
+              score >= 90 ? "#22C55E" : score >= 75 ? "#FF9933" : "#2563EB";
+            const tags = [r.quantity_tonnes >= 10 ? "Bulk" : "Small Batch"];
+            if (r.variety && r.variety !== "Not Specified") tags.push(r.variety);
+            if (r.taluka) tags.push(r.taluka);
 
-          const scored = filteredByDistrict
-            .filter((l) => l.quantity >= minQtyVal)
-            .map((l) => {
-              let score = 50; // base score once crop + min-qty already match
-
-              // Region proximity
-              if (regionSel && regionSel !== "All Regions") {
-                if (
-                  l.district &&
-                  l.district.toLowerCase() === regionSel.toLowerCase()
-                )
-                  score += 25;
-                else score -= 10; // still shown, just ranked lower — no dead-end empty results
-              } else {
-                score += 10; // no region filter set, small neutral boost
-              }
-
-              // Priority-based weighting
-              if (priority === "Best Price") {
-                // cheaper price per unit scores higher (rough normalization against a typical ceiling)
-                score += Math.max(0, 20 - l.pricePerUnit / 1000);
-              } else if (priority === "Closest Location") {
-                if (
-                  l.district &&
-                  l.district.toLowerCase() === regionSel.toLowerCase()
-                )
-                  score += 15;
-              } else if (priority === "Highest Demand") {
-                score += Math.min(15, l.quantity / 20); // larger available quantity = higher demand-fit
-              } else if (priority === "Fastest Deal") {
-                score += 10; // newest listings already sorted first by backend (createdAt desc)
-              }
-
-              score = Math.max(0, Math.min(99, Math.round(score)));
-              const color =
-                score >= 90 ? "#22C55E" : score >= 75 ? "#FF9933" : "#2563EB";
-
-              const tags = [];
-              tags.push(l.quantity >= 100 ? "Bulk" : "Small Batch");
-              if (l.soilType) tags.push(l.soilType);
-              if (l.district) tags.push(l.district);
-
-              return {
-                score,
-                color,
-                farmer: (l.farmer && l.farmer.name) || "Farmer",
-                crop: l.crop,
-                loc: l.district || l.region || "India",
-                qty: `${l.quantity} ${l.unit || "qtl"}`,
-                price: `₹${l.pricePerUnit}/${l.unit || "qtl"}`,
-                tags,
-                listingId: l._id,
-                farmerId: l.farmer && l.farmer._id,
-              };
-            })
-            .sort((a, b) => b.score - a.score)
-            .slice(0, 6);
+            return {
+              score,
+              color,
+              farmer: `Farmer ${r.farmer_id}`,
+              crop: r.crop,
+              loc: [r.village, r.taluka, r.district].filter(Boolean).join(", "),
+              qty: `${r.quantity_tonnes} t`,
+              price: `₹${r.price_per_quintal}/qtl`,
+              tags,
+              listingId: r.listing_id,
+              farmerId: r.farmer_id,
+            };
+          });
 
           setTimeout(() => {
             pulse.classList.remove("show");
@@ -1529,7 +1523,7 @@
         } catch (err) {
           pulse.classList.remove("show");
           grid.innerHTML =
-            '<p style="color:var(--muted);padding:1rem;">Could not load listings right now — check your connection and try again.</p>';
+            '<p style="color:var(--muted);padding:1rem;">Could not reach the matching service — make sure the backend and ML service are running.</p>';
           console.error("Smart matching error:", err);
         }
       }
