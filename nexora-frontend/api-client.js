@@ -7,7 +7,7 @@
  * Change API_BASE below once you deploy the backend (Render URL etc.)
  */
 
-const API_BASE = window.NEXORA_API_BASE || 'http://localhost:5000';
+const API_BASE = window.NEXORA_API_BASE || 'https://nexora-backend-ve3m0n.onrender.com';
 
 // ── Low-level request wrapper: adds JSON headers + auth token + error handling ──
 async function apiRequest(path, { method = 'GET', body, auth = true } = {}) {
@@ -69,6 +69,10 @@ const NexoraAPI = {
   // ══════════ CHAT (history) ══════════
   getChatHistory(listingId, otherUserId) { return apiRequest(`/api/chat/${listingId}/${otherUserId}`); },
   getInbox() { return apiRequest('/api/chat/inbox/all'); },
+
+  // ══════════ AI SMART MATCHING ══════════
+  smartMatchBuyerToFarmer(payload) { return apiRequest('/api/matching/buyer-to-farmer', { method: 'POST', body: payload, auth: false }); },
+  smartMatchFarmerToBuyer(payload) { return apiRequest('/api/matching/farmer-to-buyer', { method: 'POST', body: payload, auth: false }); },
 };
 
 // ══════════ REAL-TIME CHAT SOCKET ══════════
