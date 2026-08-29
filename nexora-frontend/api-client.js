@@ -7,7 +7,7 @@
  * Change API_BASE below once you deploy the backend (Render URL etc.)
  */
 
-const API_BASE = window.NEXORA_API_BASE || 'https://nexora-backend-ve3m0n.onrender.com';
+const API_BASE = window.NEXORA_API_BASE || 'https://nexora-backend-ve3m.onrender.com' ;
 
 // ── Low-level request wrapper: adds JSON headers + auth token + error handling ──
 async function apiRequest(path, { method = 'GET', body, auth = true } = {}) {
