@@ -17,9 +17,7 @@ const app = express();
 const server = http.createServer(app);
 
 // ── CORS: allow your frontend to call this API ──
-app.use(cors({
-  origin: 'https://nexora-agrotech-5prl.vercel.app'
-}));
+app.use(cors());
 app.use(express.json());
 
 // ── Socket.io, same CORS rule ──
